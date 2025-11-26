@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Summary - {{ month_name }} {{ year }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">Monthly Expense Summary</h2>
+            <p class="text-muted">{{ month_name }} {{ year }}</p>
+        </div>
+        <div class="btn-group">
+            <a href="{{ url_for('monthly_summary_selector') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-calendar-alt me-1"></i> Change Month
+            </a>
+            <button type="button" class="btn btn-success" id="exportToExcel">
+                <i class="fas fa-file-excel me-1"></i> Export to Excel
+            </button>
+            <button type="button" class="btn btn-primary" id="printSummary">
+                <i class="fas fa-print me-1"></i> Print
+            </button>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase small">Total Employees</h6>
+                    <h3 class="mb-0">{{ summary|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase small">Total Reimbursement</h6>
+                    <h3 class="mb-0">₹{{ "%.2f"|format(totals.reimbursement) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase small">Total Local Conveyance</h6>
+                    <h3 class="mb-0">₹{{ "%.2f"|format(totals.local) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Employee-wise Summary</h5>
+                <div class="input-group" style="width: 300px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search employees...">
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if summary %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="summaryTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-nowrap">Employee</th>
+                            <th class="text-nowrap text-center">Location</th>
+                            <th class="text-nowrap text-end">Expense Reimbursement</th>
+                            <th class="text-nowrap text-end">Local Conveyance</th>
+                            <th class="text-nowrap text-end">Total Payable</th>
+                            <th class="text-nowrap">Bank Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in summary %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ item.name }}</div>
+                                <small class="text-muted">{{ item.employee_id }}</small>
+                            </td>
+                            <td class="text-center">{{ item.location or '-' }}</td>
+                            <td class="text-end">₹{{ "%.2f"|format(item.exp_reimbursement) }}</td>
+                            <td class="text-end">₹{{ "%.2f"|format(item.local_conveyance) }}</td>
+                            <td class="text-end fw-bold">₹{{ "%.2f"|format(item.total_payable) }}</td>
+                            <td>
+                                {% if item.bank_name %}
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">
+                                        <i class="fas fa-university text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="small">{{ item.bank_name }}</div>
+                                        <div class="text-muted small">A/C: {{ item.account_number|default('-', true) }}</div>
+                                        <div class="text-muted small">IFSC: {{ item.ifsc_code|default('-', true) }}</div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Bank details missing</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="2" class="text-end">Total:</th>
+                            <th class="text-end">₹{{ "%.2f"|format(totals.reimbursement) }}</th>
+                            <th class="text-end">₹{{ "%.2f"|format(totals.local) }}</th>
+                            <th class="text-end">₹{{ "%.2f"|format(totals.grand_total) }}</th>
+                            <th colspan="2"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center p-5">
+                <div class="mb-3">
+                    <i class="fas fa-file-invoice-dollar fa-4x text-muted"></i>
+                </div>
+                <h5 class="text-muted">No expense data available for {{ month_name }} {{ year }}</h5>
+                <p class="text-muted">Upload and process reimbursement forms to see the summary here.</p>
+                <a href="{{ url_for('run_job') }}" class="btn btn-primary">
+                    <i class="fas fa-upload me-1"></i> Upload Forms
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Hidden form for Excel export -->
+    <form id="exportForm" action="{{ url_for('export_monthly_summary') }}" method="post" style="display: none;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="year" value="{{ year }}">
+        <input type="hidden" name="month" value="{{ month }}">
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Search functionality
+    $('#searchInput').on('keyup', function() {
+        const value = $(this).val().toLowerCase();
+        $('#summaryTable tbody tr').filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+    });
+    
+    // Export to Excel
+    $('#exportToExcel').on('click', function() {
+        const $btn = $(this);
+        const $form = $('#exportForm');
+        const formData = $form.serialize();
+        
+        // Show loading state
+        const originalText = $btn.html();
+        $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...').prop('disabled', true);
+        
+        // Submit form via AJAX
+        $.ajax({
+            url: $form.attr('action'),
+            type: 'POST',
+            data: formData,
+            headers: {
+                'X-CSRFToken': $('input[name="csrf_token"]').val()
+            },
+            xhrFields: {
+                responseType: 'blob' // Important for file downloads
+            },
+            success: function(response, status, xhr) {
+                // Create a download link and trigger it
+                const filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1];
+                const url = window.URL.createObjectURL(response);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename || 'export.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            },
+            error: function(xhr) {
+                let errorMsg = 'Error exporting to Excel';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.error) {
+                        errorMsg = response.error;
+                    }
+                } catch (e) {
+                    // If we can't parse the response, use the default error message
+                }
+                showAlert('danger', errorMsg);
+            },
+            complete: function() {
+                // Restore button state
+                $btn.html(originalText).prop('disabled', false);
+            }
+        });
+    });
+    
+    // Print functionality
+    $('#printSummary').on('click', function() {
+        window.print();
+    });
+    
+    // Add print styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @media print {
+            .card-header, .btn, .input-group, .no-print {
+                display: none !important;
+            }
+            .card {
+                border: none !important;
+            }
+            h2 {
+                font-size: 1.5rem !important;
+            }
+            table {
+                font-size: 0.8rem !important;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

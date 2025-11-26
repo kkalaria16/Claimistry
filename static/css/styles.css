@@ -1,0 +1,15 @@
+body {
+    font-family: 'Arial', sans-serif;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #e2e8f0;
+}
+
+tr:hover {
+    background-color: #f7fafc;
+}

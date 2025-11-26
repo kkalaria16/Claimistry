@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Claimistry{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Dashboard</h1>
+        <p class="text-muted mb-0">Welcome back! Here's what's happening with your expense reimbursements.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('run_job') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Upload New Form
+        </a>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-4 mb-4">
+    <!-- Total Employees Card -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-muted small text-uppercase fw-semibold">Total Employees</span>
+                        <h2 class="mt-2 mb-0">{{ total_employees }}</h2>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-3">
+                        <i class="fas fa-users fa-2x text-primary"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('employees') }}" class="btn btn-sm btn-outline-primary">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Total Forms Card -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-muted small text-uppercase fw-semibold">Total Forms</span>
+                        <h2 class="mt-2 mb-0">{{ total_forms }}</h2>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded-3">
+                        <i class="fas fa-file-invoice-dollar fa-2x text-success"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('view_forms') }}" class="btn btn-sm btn-outline-success">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- This Month's Summary Card -->
+    <div class="col-md-12 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-muted small text-uppercase fw-semibold">This Month ({{ now.strftime('%b %Y') }})</span>
+                        <h2 class="mt-2 mb-0">
+                            ₹{{ "%0.2f"|format(monthly_summary.total_amount|default(0)|float) }}
+                        </h2>
+                        <div class="text-muted small mt-1">
+                            <i class="far fa-file-alt me-1"></i> {{ monthly_summary.form_count|default(0) }} form{{ 's' if monthly_summary.form_count != 1 else '' }}
+                            <span class="mx-2">•</span>
+                            <i class="fas fa-users me-1"></i> {{ monthly_summary.employee_count|default(0) }} employee{{ 's' if monthly_summary.employee_count != 1 else '' }}
+                        </div>
+                    </div>
+                    <div class="bg-info bg-opacity-10 p-3 rounded-3">
+                        <i class="fas fa-calendar-alt fa-2x text-info"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('monthly_summary_selector') }}" class="btn btn-sm btn-outline-info">
+                        View Report <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Activity -->
+    <div class="row g-4">
+        <!-- Recent Forms -->
+        <div class="col-lg-7">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history text-primary me-2"></i>Recent Forms
+                    </h5>
+                    <a href="{{ url_for('view_forms') }}" class="btn btn-sm btn-outline-primary">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_forms %}
+                        <div class="list-group list-group-flush">
+                            {% for form_data in recent_forms %}
+                            <a href="#" class="list-group-item list-group-item-action border-0 py-3 px-4" 
+                               data-bs-toggle="modal" data-bs-target="#formModal{{ form_data.form.id }}"
+                               data-bs-tooltip="tooltip" title="Click to view details">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ form_data.employee.name if form_data.employee and form_data.employee.name else (form_data.extracted_name or '') }} ({{ form_data.form.employee_id }})</h6>
+                                        <small class="text-muted">
+                                            {{ form_data.form.from_date.strftime('%d-%b-%Y') }} to 
+                                            {{ form_data.form.to_date.strftime('%d-%b-%Y') }}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-primary">₹{{ "%0.2f"|format(form_data.form.total_amount|float) }}</div>
+                                        <div class="small text-muted">
+                                            {{ form_data.expense_entries|length if form_data.expense_entries is defined else '' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                            
+                            <!-- Form Details Modal -->
+                            <div class="modal fade" id="formModal{{ form_data.form.id }}" tabindex="-1" 
+                                 aria-labelledby="formModalLabel{{ form_data.form.id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-light">
+                                            <h5 class="modal-title" id="formModalLabel{{ form_data.form.id }}">
+                                                <i class="fas fa-file-invoice-dollar text-primary me-2"></i>
+                                                Form Details - {{ form_data.employee.name if form_data.employee and form_data.employee.name else (form_data.extracted_name or '') }}
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body p-0" id="formDetails{{ form_data.form.id }}">
+                                            <!-- Content will be loaded via AJAX -->
+                                            <div class="text-center my-5 py-4">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-3 text-muted">Loading form details...</p>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer bg-light d-flex justify-content-end gap-2">
+                                            <a id="modalEditBtn" href="#" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-edit me-1"></i> Edit
+                                            </a>
+                                            <form method="POST" action="#" style="display:inline;" class="no-global-spinner">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="fas fa-trash-alt me-1"></i> Delete
+                                                </button>
+                                            </form>
+                                            <a id="modalExportBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm">
+                                                <i class="fas fa-file-excel me-1"></i> Export
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <script>
+                                // Load form details via AJAX when modal is shown
+                                document.getElementById('formModal{{ form_data.form.id }}').addEventListener('shown.bs.modal', function () {
+                                    const formDetails = document.getElementById('formDetails{{ form_data.form.id }}');
+                                    if (!formDetails.dataset.loaded) {
+                                        fetch('{{ url_for("form_details_ajax", form_id=form_data.form.id) }}')
+                                            .then(response => response.text())
+                                            .then(html => {
+                                                formDetails.innerHTML = html;
+                                                formDetails.dataset.loaded = true;
+                                                // Initialize tooltips
+                                                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-tooltip="tooltip"]'));
+                                                tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                                                    return new bootstrap.Tooltip(tooltipTriggerEl, {
+                                                        trigger: 'hover'
+                                                    });
+                                                });
+                                            })
+                                            .catch(error => {
+                                                console.error('Error loading form details:', error);
+                                                formDetails.innerHTML = `
+                                                    <div class="alert alert-danger m-4">
+                                                        <i class="fas fa-exclamation-circle me-2"></i>
+                                                        Error loading form details. Please try again later.
+                                                    </div>
+                                                `;
+                                            });
+                                    }
+                                });
+                            </script>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-5">
+                            <div class="mb-3">
+                                <i class="fas fa-inbox fa-4x text-muted opacity-25"></i>
+                            </div>
+                            <h5 class="text-muted mb-2">No Forms Found</h5>
+                            <p class="text-muted mb-0">Upload your first expense form to get started.</p>
+                            <a href="{{ url_for('run_job') }}" class="btn btn-primary mt-3">
+                                <i class="fas fa-upload me-1"></i> Upload Form
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Employees -->
+        <div class="col-lg-5">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users text-primary me-2"></i>Recent Employees
+                    </h5>
+                    <a href="{{ url_for('employees') }}" class="btn btn-sm btn-outline-primary">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_employees %}
+                        <div class="list-group list-group-flush">
+                            {% for employee in recent_employees %}
+                            <a href="#" class="list-group-item list-group-item-action border-0 py-3 px-4"
+                               data-bs-toggle="tooltip" data-bs-placement="top" 
+                               title="Click to view details">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" 
+                                             style="width: 42px; height: 42px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <h6 class="mb-0 text-truncate">{{ employee.name }}</h6>
+                                        <div class="small text-muted">
+                                            <span class="d-inline-block text-truncate" style="max-width: 180px;">
+                                                <i class="far fa-id-card me-1"></i> {{ employee.employee_id }}
+                                                {% if employee.bank_name %}
+                                                    <span class="mx-2">•</span>
+                                                    <i class="fas fa-university me-1"></i> {{ employee.bank_name }}
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ms-2 text-end">
+                                        {% if employee.account_number %}
+                                            <span class="badge bg-light text-dark" data-bs-toggle="tooltip" 
+                                                  title="Account: {{ employee.account_number }}">
+                                                <i class="fas fa-wallet me-1"></i> {{ employee.account_number|truncate(4, True, end='') }}••••
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-primary rounded-pill">
+                                                ₹{{ "%.2f"|format(form.form.total_amount) if form.form.total_amount else '0.00' }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-5">
+                            <div class="mb-3">
+                                <i class="fas fa-users fa-4x text-muted opacity-25"></i>
+                            </div>
+                            <h5 class="text-muted mb-2">No Employees Found</h5>
+                            <p class="text-muted mb-0">Add your first employee to get started.</p>
+                            <a href="{{ url_for('new_employee') }}" class="btn btn-primary mt-3">
+                                <i class="fas fa-user-plus me-1"></i> Add Employee
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('new_employee') }}" class="btn btn-outline-primary w-100 h-100 py-3">
+                            <i class="fas fa-user-plus fa-2x mb-2"></i>
+                            <div>Add Employee</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('run_job') }}" class="btn btn-outline-success w-100 h-100 py-3">
+                            <i class="fas fa-file-upload fa-2x mb-2"></i>
+                            <div>Upload Forms</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('monthly_summary_selector') }}" class="btn btn-outline-info w-100 h-100 py-3">
+                            <i class="fas fa-chart-pie fa-2x mb-2"></i>
+                            <div>View Reports</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('view_forms') }}" class="btn btn-outline-secondary w-100 h-100 py-3">
+                            <i class="fas fa-search fa-2x mb-2"></i>
+                            <div>Search Forms</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Form Details Modal -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Form Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="formDetailsContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading form details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Handle form details modal
+    $('#formModal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const formId = button.data('form-id');
+        const modal = $(this);
+        // Load form details via AJAX
+        $.get(`/form_details/${formId}`, function(data) {
+            modal.find('#formDetailsContent').html(data);
+        }).fail(function() {
+            modal.find('#formDetailsContent').html(
+                '<div class="alert alert-danger">Failed to load form details. Please try again.</div>'
+            );
+        });
+    });
+    // Reset modal content when closed
+    $('#formModal').on('hidden.bs.modal', function () {
+        $(this).find('#formDetailsContent').html(`
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading form details...</p>
+            </div>
+        `);
+    });
+    // Intercept Delete button in modal footer to show confirmation modal
+    $(document).on('submit', '.no-global-spinner', function(e) {
+        e.preventDefault();
+        var deleteUrl = $(this).attr('action');
+        // Set the confirmation modal's form action
+        var $confirmModal = $('#deleteConfirmationModal');
+        $confirmModal.find('form#deleteForm').attr('action', deleteUrl);
+        $confirmModal.modal('show');
+    });
+    // Dynamically update modal footer action buttons for each form modal
+    $('[id^=formModal]').on('show.bs.modal', function (event) {
+        var formId = this.id.replace('formModal', '');
+        var editBtn = $(this).find('#modalEditBtn');
+        var deleteForm = $(this).find('.no-global-spinner'); // Changed to .no-global-spinner
+        var exportBtn = $(this).find('#modalExportBtn');
+        if (editBtn.length) editBtn.attr('href', "/admin/edit_form/" + formId);
+        if (deleteForm.length) deleteForm.attr('action', "/delete_form/" + formId);
+        if (exportBtn.length) exportBtn.attr('href', "/export_form_excel/" + formId);
+    });
+    // Reset confirmation modal delete button state when modal is closed
+    $('#deleteConfirmationModal').on('hidden.bs.modal', function () {
+        var submitBtn = $(this).find('button[type="submit"]');
+        submitBtn.prop('disabled', false);
+        submitBtn.html('<i class="fas fa-trash-alt me-1"></i> Delete');
+    });
+});
+
+// Live update for Recent Forms
+function renderRecentForms(forms) {
+    var $list = $('.list-group.list-group-flush');
+    if (!$list.length) return;
+    $list.empty();
+    forms.forEach(function(form) {
+        var html = `<a href="#" class="list-group-item list-group-item-action border-0 py-3 px-4" data-bs-toggle="modal" data-bs-target="#formModal${form.id}" data-bs-tooltip="tooltip" title="Click to view details">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1">${form.name} (${form.employee_id})</h6>
+                    <small class="text-muted">${form.from_date} to ${form.to_date}</small>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold text-primary">₹${parseFloat(form.total_amount).toFixed(2)}</div>
+                </div>
+            </div>
+        </a>`;
+        $list.append(html);
+    });
+}
+var lastRecentForms = null;
+function pollRecentForms() {
+    // If any modal is open, skip updating the list
+    if ($('.modal.show').length) return;
+    $.getJSON('/api/recent_forms', function(data) {
+        var json = JSON.stringify(data);
+        if (json !== lastRecentForms) {
+            renderRecentForms(data);
+            lastRecentForms = json;
+        }
+    });
+}
+setInterval(pollRecentForms, 10000);
+</script>
+{% endblock %}

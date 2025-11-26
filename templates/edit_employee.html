@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1 class="text-2xl font-bold mb-4">Edit Employee</h1>
+    <form method="POST" class="space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+            <label class="block">Employee ID:</label>
+            <input type="text" name="employee_id" class="border p-2 w-full" value="{{ employee.employee_id }}" required>
+        </div>
+        <div>
+            <label class="block">Name:</label>
+            <input type="text" name="name" class="border p-2 w-full" value="{{ employee.name }}" required>
+        </div>
+        <div>
+            <label class="block">Bank Name:</label>
+            <input type="text" name="bank_name" class="border p-2 w-full" value="{{ employee.bank_name }}">
+        </div>
+        <div>
+            <label class="block">Account Number:</label>
+            <input type="text" name="account_number" class="border p-2 w-full" value="{{ employee.account_number }}">
+        </div>
+        <div>
+            <label class="block">IFSC Code:</label>
+            <input type="text" name="ifsc_code" class="border p-2 w-full" value="{{ employee.ifsc_code }}">
+        </div>
+        <button type="submit" class="bg-blue-500 text-white p-2 rounded">Save</button>
+    </form>
+{% endblock %} 

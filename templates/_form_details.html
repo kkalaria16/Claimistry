@@ -1,0 +1,126 @@
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h5>Form Details</h5>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Employee ID:</strong></p>
+                            <p class="mb-1"><strong>Name:</strong></p>
+                            <p class="mb-1"><strong>Designation:</strong></p>
+                            <p class="mb-1"><strong>Location:</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1">{{ form.employee_id }}</p>
+                            <p class="mb-1">{{ employee.name if employee and employee.name else (extracted_name or '') }}</p>
+                            <p class="mb-1">{{ form.designation or 'N/A' }}</p>
+                            <p class="mb-1">{{ form.location or 'N/A' }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Period:</strong></p>
+                            <p class="mb-1"><strong>Total Amount:</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1">
+                                {{ form.from_date.strftime('%d-%b-%Y') if form.from_date else 'N/A' }} to 
+                                {{ form.to_date.strftime('%d-%b-%Y') if form.to_date else 'N/A' }}
+                            </p>
+                            <p class="mb-1">₹{{ "%.2f"|format(form.total_amount) if form.total_amount else '0.00' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h5>Bank Details</h5>
+            <div class="card">
+                <div class="card-body">
+                    {% if employee and (employee.bank_name or employee.account_number or employee.ifsc_code) %}
+                        <div class="mb-2">
+                            <p class="mb-1"><strong>Bank Name:</strong> {{ employee.bank_name or 'N/A' }}</p>
+                            <p class="mb-1"><strong>Account Number:</strong> {{ employee.account_number or 'N/A' }}</p>
+                            <p class="mb-1"><strong>IFSC Code:</strong> {{ employee.ifsc_code or 'N/A' }}</p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            No bank details available for this employee.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h5>Expense Entries</h5>
+    {% if entries %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Purpose</th>
+                        <th class="text-center">Mode</th>
+                        <th class="text-end">Distance (Km)</th>
+                        <th class="text-end">Amount (₹)</th>
+                        <th class="text-center">Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                        <tr>
+                            <td>{{ entry.date.strftime('%d-%b-%Y') if entry.date else 'N/A' }}</td>
+                            <td>{{ entry.from_location or 'N/A' }}</td>
+                            <td>{{ entry.to_location or 'N/A' }}</td>
+                            <td>{{ entry.purpose or 'N/A' }}</td>
+                            <td class="text-center">{{ entry.mode_of_travel or 'N/A' }}</td>
+                            <td class="text-end">{{ "%.1f"|format(entry.distance_km) if entry.distance_km is not none else 'N/A' }}</td>
+                            <td class="text-end">{{ "%.2f"|format(entry.amount_rs) if entry.amount_rs is not none else '0.00' }}</td>
+                            <td class="text-center">
+                                {% set local_modes = ['2-wheeler', '4-wheeler', 'auto', 'cab', '2w', '4w', 'car', 'bike'] %}
+                                {% set mode_lower = entry.mode_of_travel|lower if entry.mode_of_travel else '' %}
+                                {% if mode_lower in local_modes %}
+                                    <span class="badge bg-info">Local</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Reimbursement</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="5" class="text-end">Total:</th>
+                        <th class="text-end">{{ "%.1f"|format(entries|sum(attribute='distance_km') or 0) }}</th>
+                        <th class="text-end">₹{{ "%.2f"|format(entries|sum(attribute='amount_rs') or 0) }}</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            No expense entries found for this form.
+        </div>
+    {% endif %}
+
+    {% if form.image_filename %}
+        <div class="mt-4">
+            <h5>Uploaded Form Tables</h5>
+            <div class="card">
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename='uploads/' + form.image_filename) }}" 
+                         alt="Expense Form" 
+                         class="img-fluid" 
+                         style="max-height: 500px; width: auto;">
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>

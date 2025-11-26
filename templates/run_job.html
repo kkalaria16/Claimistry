@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Expense Forms{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-4">
+                    <h2 class="mb-3 text-center"><i class="fas fa-file-upload text-primary me-2"></i>Upload Expense Forms</h2>
+                    <p class="text-muted text-center mb-4">Upload scanned images or photos of expense forms. You can select multiple files at once.</p>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                      {% if messages %}
+                        {% for category, message in messages %}
+                          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm" class="needs-validation" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="images" class="form-label fw-semibold">Select Images</label>
+                            <div id="drop-area" class="border border-2 border-primary rounded-3 p-4 text-center bg-light mb-2" style="cursor:pointer;">
+                                <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
+                                <div class="mb-2">Drag & drop files here or <span class="text-primary text-decoration-underline" style="cursor:pointer;">browse</span></div>
+                                <input type="file" id="images" name="images" accept="image/*" multiple class="form-control d-none" required>
+                                <div id="file-list" class="mt-2 small text-start"></div>
+                            </div>
+                            <div class="form-text">Accepted formats: JPG, PNG, JPEG.</div>
+                            <div class="invalid-feedback">Please select at least one image file.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="fas fa-upload me-1"></i> Upload & Process
+                        </button>
+                    </form>
+                    <div id="upload-alert-placeholder"></div>
+
+                    <div class="mt-4">
+                        <h6>How to use:</h6>
+                        <ul class="small text-muted mb-0 ps-3">
+                            <li>Scan or photograph your expense forms clearly.</li>
+                            <li>Drag and drop all pages/images at once, or use the browse link.</li>
+                            <li>After upload, you can continue working—processing happens in the background.</li>
+                            <li>New forms will appear automatically in your dashboard and forms list when ready.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Drag-and-drop upload logic
+const dropArea = document.getElementById('drop-area');
+const fileInput = document.getElementById('images');
+const fileList = document.getElementById('file-list');
+
+if (dropArea && fileInput) {
+    dropArea.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'INPUT') fileInput.click();
+    });
+    dropArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropArea.classList.add('bg-primary', 'bg-opacity-10');
+    });
+    dropArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dropArea.classList.remove('bg-primary', 'bg-opacity-10');
+    });
+    dropArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropArea.classList.remove('bg-primary', 'bg-opacity-10');
+        fileInput.files = e.dataTransfer.files;
+        updateFileList();
+    });
+    fileInput.addEventListener('change', updateFileList);
+}
+
+function updateFileList() {
+    fileList.innerHTML = '';
+    if (fileInput.files.length > 0) {
+        Array.from(fileInput.files).forEach((file, idx) => {
+            const item = document.createElement('div');
+            item.className = 'd-flex align-items-center mb-1';
+            item.innerHTML = `<i class='fas fa-file-image text-primary me-2'></i> ${file.name}`;
+            fileList.appendChild(item);
+        });
+    }
+}
+
+// Form submission with AJAX
+$('#uploadForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const formData = new FormData(form);
+    const submitBtn = $(form).find('button[type="submit"]');
+    const originalBtnText = submitBtn.html();
+    
+    // Add CSRF token to form data if not already included
+    if (!formData.get('csrf_token')) {
+        formData.append('csrf_token', $('input[name="csrf_token"]').val());
+    }
+    
+    // Show loading state
+    submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+    
+    // Clear previous alerts
+    $('.alert').remove();
+    
+    // Submit form via AJAX
+    $.ajax({
+        url: form.action,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            'X-CSRFToken': $('input[name="csrf_token"]').val()
+        },
+        success: function(response) {
+            // Show success message
+            const successMsg = 'Files uploaded successfully! Processing in progress...';
+            const alertHtml = `
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    ${successMsg}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+            $('#upload-alert-placeholder').html(alertHtml);
+            
+            // Reset form
+            form.reset();
+            fileList.innerHTML = '';
+            
+            // Redirect to forms list after a short delay
+            setTimeout(() => {
+                window.location.href = "{{ url_for('view_forms') }}";
+            }, 1500);
+        },
+        error: function(xhr) {
+            let errorMsg = 'An error occurred while processing your request.';
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (response.error) {
+                    errorMsg = response.error;
+                }
+            } catch (e) {
+                // If we can't parse the response, use the default error message
+            }
+            const errorHtml = `
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    ${errorMsg}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+            $('#upload-alert-placeholder').html(errorHtml);
+        },
+        complete: function() {
+            // Restore button state
+            submitBtn.prop('disabled', false).html(originalBtnText);
+        }
+    });
+});
+</script>
+{% endblock %}

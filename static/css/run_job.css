@@ -1,0 +1,67 @@
+.pdf-tile {
+    width: 120px;
+    height: 60px;
+    padding: 4px;
+    overflow: hidden;
+}
+
+.pdf-tile:hover {
+    background-color: #e8efea;
+    border-color: #78a085;
+}
+
+.file-tile {
+    position: relative;
+    width: 160px;
+    height: 45px;
+    border: 2px solid #a3605a;
+    border-radius: 0.375rem;
+    padding: 4px;
+    text-align: center;
+    background: #a3605a1c;
+    line-height: 1.2;
+}
+/* Hide text on hover */
+.file-tile:hover span, 
+.file-tile:hover p { /* Assuming the text is inside a <span> or <p> */
+    opacity: 0.2;
+}
+.file-tile:hover .tile-actions {
+    opacity: 1;
+}
+.file-tile:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+}
+.tile-actions {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 2rem; /* Adjust the spacing between buttons */
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.tile-actions button {
+    padding: 0;
+}
+.tile-actions svg {
+    width: 24px;
+    height: 24px;
+}
+#pdf-modal.show #modal-content {
+    transform: translateY(0);
+}
+#pdf-modal #modal-content {
+    transform: translateY(-20px);
+}
+#warning-popup.show {
+    animation: fadeInOut 3s ease-in-out forwards;
+}
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-10px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-10px); }
+}
