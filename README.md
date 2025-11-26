@@ -564,19 +564,22 @@ Upon launching the application, you'll see the main dashboard displaying:
 ```
 Claimistry/
 ├── app.py                          # Main Flask application and routes
+├── app.log                         # Application logs
 ├── image_preprocess.py             # Image processing utilities
 ├── init_db.py                      # Database initialization script
 ├── requirements.txt                # Python dependencies
+├── LICENSE                         # CC BY-NC-SA 4.0 license
+├── README.md                       # Project documentation
 ├── .env                            # Environment variables (create manually)
+├── .git/                           # Git repository metadata
 ├── .gitignore                      # Git ignore rules
-├── README.md                       # This file
 │
 ├── instance/                       # Instance-specific files
 │   └── database.db                # SQLite database (auto-created)
 │
 ├── flask_session/                 # Flask session storage
-│   ├── 2029240f6d1128be89ddc32729463129
-│   ├── ...
+│   ├── (session files)            # Auto-generated session files
+│   └── ...
 │
 ├── static/                        # Static assets
 │   ├── css/
@@ -584,8 +587,15 @@ Claimistry/
 │   │   └── run_job.css           # Upload form styling
 │   ├── js/
 │   │   └── scripts.js            # Client-side JavaScript
-|   ├── uploads/                  # User-uploaded form images
-│   └── image.png                 # Image used in readme
+│   ├── images/
+│   │   ├── dashboard.png         # Dashboard screenshot
+│   │   ├── employee-management.png
+│   │   ├── form-upload.png
+│   │   ├── form-view.png
+│   │   ├── form-editing.png
+│   │   ├── monthly-summary.png
+│   │   └── excel-export.png
+│   └── uploads/                  # User-uploaded form images
 │
 ├── templates/                    # Jinja2 HTML templates
 │   ├── base.html                 # Base template with layout
@@ -605,7 +615,9 @@ Claimistry/
 │
 ├── test_images/                  # Sample images for testing
 │
-└── __pycache__/                  # Python bytecode cache (auto-generated)
+├── __pycache__/                  # Python bytecode cache (auto-generated)
+│
+└── .git/                          # Git version control
 ```
 
 ### Component Diagram
