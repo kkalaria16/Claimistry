@@ -1,6 +1,6 @@
 # Claimistry
 
-**Claimistry** is an intelligent expense reimbursement management system that leverages modern AI and document processing technologies to streamline the employee reimbursement workflow. It automatically extracts data from uploaded reimbursement form images, intelligently organizes expense records, and provides comprehensive monthly reporting capabilities—eliminating manual data entry and reducing administrative overhead.
+**Claimistry** is an intelligent expense reimbursement management system that leverages generative AI and document processing technologies to streamline the employee reimbursement workflow. It automatically extracts data from uploaded reimbursement form images, intelligently organizes expense records, and provides comprehensive monthly reporting capabilities—eliminating manual data entry and reducing administrative overhead.
 
 ![alt text](static/images/claimistry.png)
 ---
