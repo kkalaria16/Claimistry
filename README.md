@@ -2,7 +2,7 @@
 
 **Claimistry** is an intelligent expense reimbursement management system that leverages modern AI and document processing technologies to streamline the employee reimbursement workflow. It automatically extracts data from uploaded reimbursement form images, intelligently organizes expense records, and provides comprehensive monthly reporting capabilities—eliminating manual data entry and reducing administrative overhead.
 
-![alt text](static/image.png)
+![alt text](static/images/claimistry.png)
 ---
 
 ## Table of Contents
@@ -178,18 +178,29 @@ A non-profit serving 20+ partner organizations uses Claimistry to track grant-re
 
 ---
 
-## Screenshots
+## 📸 Screenshots
 
-> **Placeholder: Add application screenshots here**
->
-> Suggested screenshot locations:
-> - Dashboard/Home Page
-> - Employee Management Interface
-> - Form Upload & Processing
-> - Form Editing Interface
-> - Monthly Summary Report
-> - Excel Export Preview
-> - Mobile Responsive View
+### Dashboard / Home Page
+![Dashboard Screenshot](static/images/dashboard.png)
+
+### Employee Management Interface
+![Employee Management Screenshot](static/images/employee-management.png)
+
+### Form Upload & Processing
+![Form Upload Screenshot](static/images/form-upload.png)
+
+### Form Viewing
+![Form View Screenshot](static/images/form-view.png)
+
+### Form Editing Interface
+![Form Editing Screenshot](static/images/form-editing.png)
+
+### Monthly Summary Report
+![Monthly Summary Screenshot](static/images/monthly-summary.png)
+
+### Excel Export Preview
+![Excel Export Screenshot](static/images/excel-export.png)
+
 
 ---
 
@@ -565,9 +576,7 @@ Claimistry/
 │
 ├── flask_session/                 # Flask session storage
 │   ├── 2029240f6d1128be89ddc32729463129
-│   ├── 2bcafa74526d14182c49e6294552c786
-│   ├── 40efcfba9effc3a7740b8fd0925d48b0
-│   └── bae0ca1dacfd1f8de4d5533e3de56f05
+│   ├── ...
 │
 ├── static/                        # Static assets
 │   ├── css/
@@ -575,9 +584,10 @@ Claimistry/
 │   │   └── run_job.css           # Upload form styling
 │   ├── js/
 │   │   └── scripts.js            # Client-side JavaScript
-│   └── uploads/                  # User-uploaded form images
+|   ├── uploads/                  # User-uploaded form images
+│   └── image.png                 # Image used in readme
 │
-├── templates/                     # Jinja2 HTML templates
+├── templates/                    # Jinja2 HTML templates
 │   ├── base.html                 # Base template with layout
 │   ├── index.html                # Dashboard/home page
 │   ├── employees.html            # Employee list view
